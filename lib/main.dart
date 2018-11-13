@@ -1,11 +1,14 @@
-
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'dart:async';
 import 'dart:io';
-import 'package:image_picker/image_picker.dart';
-import 'package:video_player/video_player.dart';
-import 'package:flutter/material.dart';
+
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+//import "package:path/path.dart" show dirname;
 
 
+//void main() => runApp(new MyHomePage());
 void main() {
   runApp(new MyApp());
 }
@@ -14,224 +17,128 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
-      title: 'Image Picker Demo',
-      home: new MyHomePage(title: 'Image Picker Example'),
+      title: 'IPM-P2',
+      home:  MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  final String title;
-
   @override
   _MyHomePageState createState() => new _MyHomePageState();
 }
 
+
 class _MyHomePageState extends State<MyHomePage> {
-  Future<File> _imageFile;//////////////////////////////////////////////////////////////////////////////
-  bool isVideo = false;/////////////////////////////////////////////////////////////////
-  VideoPlayerController _controller;////////////////////////////////////
-  VoidCallback listener;/////////////////////////////////////////////////////
+  File _image;
 
-  void _onImageButtonPressed(ImageSource source) {
+  Future getImage() async {
+    //represent the results of asynchronous operations
+    var image = await ImagePicker.pickImage(source: ImageSource
+        .camera); //To suspend execution until a future completes
+
     setState(() {
-      if (_controller != null) {
-        _controller.setVolume(0.0);
-        _controller.removeListener(listener);
-      }
-      /*if (isVideo) {
-        ImagePicker.pickVideo(source: source).then((File file) {
-          if (file != null && mounted) {
-            setState(() {
-              _controller = VideoPlayerController.file(file)
-                ..addListener(listener)
-                ..setVolume(1.0)
-                ..initialize()
-                ..setLooping(true)
-                ..play();
-            });
-          }
-        });
-      } else {*/
-        _imageFile = ImagePicker.pickImage(source: source);/////////////////////
-
+      _image = image;
     });
   }
 
   @override
-  void deactivate() {
-    if (_controller != null) {
-      _controller.setVolume(0.0);
-      _controller.removeListener(listener);
-    }
-    super.deactivate();
-  }
-
-  @override
-  void dispose() {
-    if (_controller != null) {
-      _controller.dispose();
-    }
-    super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    listener = () {
-      setState(() {});
-    };
-  }
-
-  /*Widget _previewVideo(VideoPlayerController controller) {
-    if (controller == null) {
-      return const Text(
-        'You have not yet picked a video',
-        textAlign: TextAlign.center,
-      );
-    } else if (controller.value.initialized) {
-      return Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: AspectRatioVideo(controller),
-      );
-    } else {
-      return const Text(
-        'Error Loading Video',
-        textAlign: TextAlign.center,
-      );
-    }
-  }*/
-
-  Widget _previewImage() {
-    return FutureBuilder<File>(
-        future: _imageFile,
-        builder: (BuildContext context, AsyncSnapshot<File> snapshot) {
-          if (snapshot.connectionState == ConnectionState.done &&
-              snapshot.data != null) {
-            return Image.file(snapshot.data);
-          } else if (snapshot.error != null) {
-            return const Text(
-              'Error picking image.',
-              textAlign: TextAlign.center,
-            );
-          } else {
-            return const Text(
-              'You have not yet picked an image.',
-              textAlign: TextAlign.center,
-            );
-          }
-        });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
+    return new Scaffold(
+      appBar: new AppBar(
+        title: new Text('Image Picker Example'),
       ),
-      //body: Center(
-        //child: isVideo ? _previewVideo(_controller) : _previewImage(),
-     // ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: <Widget>[
-          //FloatingActionButton(
-            //onPressed: () {
-              //isVideo = false;
-              //_onImageButtonPressed(ImageSource.gallery);
-            //},
-            //heroTag: 'image0',
-            //tooltip: 'Pick Image from gallery',
-            //child: const Icon(Icons.photo_library),
-          //),
-          Padding(///////////////////////////////////////////////////////////////
-            padding: const EdgeInsets.only(top: 16.0),
-            child: FloatingActionButton(
-              onPressed: () {
-                isVideo = false;
-                _onImageButtonPressed(ImageSource.camera);//////////////////////////
-              },
-              heroTag: 'image1',
-              tooltip: 'Take a Photo',
-              child: const Icon(Icons.camera_alt),
-            ),
-          ),
-          //Padding(
-            //padding: const EdgeInsets.only(top: 16.0),
-            //child: FloatingActionButton(
-              //backgroundColor: Colors.red,
-              //onPressed: () {
-                //isVideo = true;
-                //_onImageButtonPressed(ImageSource.gallery);
-              //},
-              //heroTag: 'video0',
-              //tooltip: 'Pick Video from gallery',
-              //child: const Icon(Icons.video_library),
-            //),
-          //),
-          //Padding(
-            //padding: const EdgeInsets.only(top: 16.0),
-            //child: FloatingActionButton(
-              //backgroundColor: Colors.red,
-             // onPressed: () {
-               // isVideo = true;
-               // _onImageButtonPressed(ImageSource.camera);
-             // },
-              //heroTag: 'video1',
-              //tooltip: 'Take a Video',
-              //child: const Icon(Icons.videocam),
-            //),
-          //),
-        ],
+      body: new Center(
+        child: _image == null
+            ? new Text('No image selected.')
+        //: new Image.file(_image),
+            : new Image.file(convert_image()),
+      ),
+      floatingActionButton: new FloatingActionButton(
+        onPressed: getImage,
+        tooltip: 'Pick Image',
+        child: new Icon(Icons.add_a_photo),
       ),
     );
   }
-}
 
-class AspectRatioVideo extends StatefulWidget {
-  final VideoPlayerController controller;
+  convert_image() async {
+    var image = File(_image.path);
+    var imageAsBytes = await image.readAsBytes();
 
-  AspectRatioVideo(this.controller);
+// Creating request
+// NOTE: In the emulator, localhost ip is 10.0.2.2
+    var uri = Uri.parse('http://127.0.0.1:5000/cartoon');
+    var request = http.MultipartRequest("POST", uri);
+    var inputFile = http.MultipartFile.fromBytes(
+        'image', imageAsBytes, filename: 'image.jpg');
+    request.files.add(inputFile);
 
-  @override
-  AspectRatioVideoState createState() => new AspectRatioVideoState();
-}
+    //try {///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Sending request and waiting for response
+    var response = await request.send();
+    if (response.statusCode == 200) {
+// Receiving response stream
+      var responseStr = await response.stream.bytesToString();
 
-class AspectRatioVideoState extends State<AspectRatioVideo> {
-  VideoPlayerController get controller => widget.controller;
-  bool initialized = false;
+// Converting response string to json dictionary
+      var data = jsonDecode(responseStr);
 
-  VoidCallback listener;
+// Accessing response data
+      var cartoon = data['cartoon'];
+      if (cartoon != null) {
+// Creating the output file
 
-  @override
-  void initState() {
-    super.initState();
-    listener = () {
-      if (!mounted) {
-        return;
+// Decoding base64 string received as response
+        var imageResponse = base64.decode(
+            cartoon);
+        return imageResponse;
       }
-      if (initialized != controller.value.initialized) {
-        initialized = controller.value.initialized;
-        setState(() {});
-      }
-    };
-    controller.addListener(listener);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (initialized) {
-      final Size size = controller.value.size;
-      return new Center(
-        child: new AspectRatio(
-          aspectRatio: size.width / size.height,
-          child: new VideoPlayer(controller),
-        ),
-      );
-    } else {
-      return new Container();
     }
   }
+
+/***
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    class convert_image extends StatelessWidget {
+    @override
+    Widget build(BuildContext context) {
+    var image = ;/////////////////////////////////////////////////////////////////////////////////////////
+    var imageAsBytes = await image.readAsBytes();/////////////////////////////////////////////////////////////////////////
+
+    // Creating request
+    // NOTE: In the emulator, localhost ip is 10.0.2.2
+    var uri = Uri.parse('http://127.0.0.1:5000/cartoon');///////////////////////////////////////////////////////////////////
+    var request = http.MultipartRequest("POST", uri);////////////////////////////////////////////////////////////////////////////
+    var inputFile = http.MultipartFile.fromBytes('image', imageAsBytes, filename: 'image.jpg');///////////////////////////////////////
+    request.files.add(inputFile);//////////////////////////////////////////////////////////////////////////////////////////////////
+
+    try {///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Sending request and waiting for response
+    var response = await request.send();/////////////////////////////////////////////////////////////////////////////////////////////
+    if (response.statusCode == 200) {////////////////////////////////////////////////////////////////////////////////////////////
+    // Receiving response stream
+    var responseStr = await response.stream.bytesToString();/////////////////////////////////////////////////////////////////
+
+    // Converting response string to json dictionary
+    var data = jsonDecode(responseStr);///////////////////////////////////////////////////////////////////////////////////////
+
+    // Accessing response data
+    var cartoon = data['cartoon'];///////////////////////////////////////////////////////////////////////////////////////
+    if (cartoon != null) {///////////////////////////////////////////////////////////////////////////////////////////////
+    // Creating the output file
+
+    // Decoding base64 string received as response
+    var imageResponse = base64.decode(cartoon);/////////////////////////////////////////////////////////////////
+    return imageResponse
+    // Writing the decoded image to the output file
+    //await outputFile.writeAsBytes(imageResponse);////////////////////////////////////////////////////////////////
+
+    //print( 'Server is down');////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    }
+
+    }*/
+
 }
