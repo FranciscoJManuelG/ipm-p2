@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:async';
 import 'dart:io';
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-//import "package:path/path.dart" show dirname;
+import "package:path/path.dart" show dirname;
 
 
 //void main() => runApp(new MyHomePage());
@@ -46,23 +45,23 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text('Image Picker Example'),
+        title: new Text('IPM-P2'),
       ),
       body: new Center(
         child: _image == null
             ? new Text('No image selected.')
         //: new Image.file(_image),
-            : new Image.file(convert_image()),
+            : new Image.file(convertImage()),
       ),
       floatingActionButton: new FloatingActionButton(
         onPressed: getImage,
         tooltip: 'Pick Image',
-        child: new Icon(Icons.add_a_photo),
+        child: new Icon(Icons.camera_alt),
       ),
     );
   }
 
-  convert_image() async {
+  convertImage() async {
     var image = File(_image.path);
     var imageAsBytes = await image.readAsBytes();
 
@@ -74,25 +73,25 @@ class _MyHomePageState extends State<MyHomePage> {
         'image', imageAsBytes, filename: 'image.jpg');
     request.files.add(inputFile);
 
-    //try {///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Sending request and waiting for response
-    var response = await request.send();
-    if (response.statusCode == 200) {
-// Receiving response stream
+      // Sending request and waiting for response
+      var response = await request.send();
+      if (response.statusCode == 200) {
+      // Receiving response stream
       var responseStr = await response.stream.bytesToString();
 
-// Converting response string to json dictionary
+      // Converting response string to json dictionary
       var data = jsonDecode(responseStr);
 
-// Accessing response data
+      // Accessing response data
       var cartoon = data['cartoon'];
       if (cartoon != null) {
-// Creating the output file
-
-// Decoding base64 string received as response
-        var imageResponse = base64.decode(
-            cartoon);
-        return imageResponse;
+      // Creating the output file
+        var outputFile = File("/home/franjm1116/Escritorio/ipm-p2/cartoon.png");
+      // Decoding base64 string received as response
+        var imageResponse = base64.decode(cartoon);
+        // Writing the decoded image to the output file
+        await outputFile.writeAsBytes(imageResponse);
+        return outputFile;
       }
     }
   }
