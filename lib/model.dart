@@ -88,6 +88,20 @@ class ImageModel extends Model {
       print( 'Server is down');
     }
   }
+  Future shareImage() async {
+    String BASE64_IMAGE ="data:image/png;base64, "+_temp;
+    //String BASE64_IMAGE =base64aa.patch;
+    AdvancedShare.generic(
+        msg: "Base64 file share",
+        subject: "Flutter",
+        title: "Share Image",
+        type: "image/png",
+        url: BASE64_IMAGE
+    ).then( (response) {
+      print(response);
+    }
+    );
+  }
 }
 
 

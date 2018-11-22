@@ -13,8 +13,6 @@ import 'package:scoped_model/scoped_model.dart';
 
 import 'package:ipm_p2/model.dart';
 
-
-
 //void main() => runApp(new MyHomePage());
 void main() {
   runApp(MyApp(
@@ -36,56 +34,68 @@ class MyApp extends StatelessWidget {
       model: model,
       child: MaterialApp(
         title: 'Scoped Model Demo',
-        home: View(),////////////////////////
+        home: View(), ////////////////////////
       ),
     );
   }
 }
 
-
-
-
-class View  extends StatelessWidget{
-
+class View extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
         title: new Text('Cartoongram'),
       ),
-      body:ScopedModelDescendant<ImageModel>(
-          builder: (context, child, model) {
-             return Center(
-              child: model.cartoon == null
-                  ? new Text('No se ha realizado ninguna fotografía')
-                  : new Image.file(model.cartoon),
-            );
-
-          },
+      body: ScopedModelDescendant<ImageModel>(
+        builder: (context, child, model) {
+          ////
+          return Center(
+            child: model.cartoon == null
+                ? new Text('No se ha realizado ninguna fotografía')
+                : new Image.file(model.cartoon),
+          );
+        },
       ),
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: <Widget>[
           ScopedModelDescendant<ImageModel>(
-          builder: (context, child, model) {
-          return  FloatingActionButton(
-            onPressed: model.getImage,
-            tooltip: 'Pick Image',
-            child: new Icon(Icons.camera_alt),
-            );
-          },
-
+            builder: (context, child, model) {
+              return FloatingActionButton(
+                onPressed: model.getImage,
+                tooltip: 'Pick Image',
+                child: new Icon(Icons.camera_alt),
+              );
+            },
           ),
-
-
+          ScopedModelDescendant<ImageModel>(
+            builder: (context, child, model) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: FloatingActionButton(
+                  onPressed: model.shareImage,
+                  tooltip: 'ShareImage',
+                  child: new Icon(Icons.share),
+                ),
+              );
+            },
+          ),
+          ScopedModelDescendant<ImageModel>(
+            builder: (context, child, model) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: FloatingActionButton(
+                  //onPressed:_onImageButtonPressed(ImageSource.gallery);,
+                  tooltip: 'Gallery',
+                  child: new Icon(Icons.photo_library),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
   }
-
-
-
-
-
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
