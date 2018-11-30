@@ -12,14 +12,87 @@ import 'package:advanced_share/advanced_share.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 
+
+
 class ImageModel extends Model {
+
+  String patchImages;
+  String patchCount;
   File _image;
   File _cartoon;
   var _temp;
-  var i = 0;
   Future<File> _imageFile;
 
+
   File get cartoon => _cartoon;
+
+  static Future<String> get localPathname async {//para acceder desde fuera al pathImages
+    var directory = await getApplicationDocumentsDirectory();
+
+    return directory.path+"/cartoon";
+  }
+
+  static Future<int> get count async {//para acceder desde fuera al numero almacenado en /count
+
+    var directory = await getApplicationDocumentsDirectory();
+    String patch = directory.path+"counter.txt";
+
+    var counterfile = File(patch);
+
+    String a=counterfile.readAsStringSync();
+
+     return int.parse(a);
+  }
+
+   Future<int> get verifyCount async {//para verificar si tenemos algun numero en /count
+
+    var directory = await getApplicationDocumentsDirectory();
+    String patch = directory.path+"counter.txt";
+
+    var counterfile = File(patch);
+
+    String a=counterfile.readAsStringSync();
+     return int.parse(a);
+  }
+
+  Future<String> get patchCountInit async {//para establecer variable patchCount en constructor
+
+    var directory = await getApplicationDocumentsDirectory();
+    patchCount = directory.path+"counter.txt";
+    try {
+      String a = File(patchCount).readAsStringSync();
+    }catch (e){
+      File(patchCount).writeAsStringSync("0");
+    }
+
+      String a=File(patchCount).readAsStringSync();
+      print(a+"  DEBE EJECUTARSE UNA VEZ");
+
+      return patchImages;
+    }
+
+
+
+   Future<String> get patchImagesInit async {//para establecer variable patchImages en constructor
+    var directory = await getApplicationDocumentsDirectory();
+    patchImages=directory.path+"/cartoon";
+    return directory.path+"/cartoon";
+  }
+
+  ImageModel() {
+    try{
+      this.patchImagesInit;
+
+      this.patchCountInit;
+
+      this.verifyCount;
+    }catch (e){
+
+      File(patchCount).writeAsStringSync("0");
+      String a=File(patchCount).readAsStringSync();
+
+    }
+  }
 
   Future getImage() async {
     //represent the results of asynchronous operations
@@ -28,9 +101,9 @@ class ImageModel extends Model {
 
       _image = image;
       notifyListeners();
-    var cartoon = await convertImage();
+    var cartoon = await convertImage();//////////////////////////
 
-      _cartoon = cartoon;
+      _cartoon = cartoon;////////////////////////
       print(_cartoon);
     notifyListeners();
   }
@@ -41,11 +114,16 @@ class ImageModel extends Model {
     //var currentPath = dirname(Platform.script.path);
     // Generating  absolute paths for the input/output images
     var pathImage=_image.path;
-    Directory appDocDir;
-    appDocDir = await getApplicationDocumentsDirectory();
-    String appDocPath = appDocDir.path;
+
+
+    var counterfile1 = File(patchCount);//recogemos valor almacenado
+    String a=counterfile1.readAsStringSync();
+    int i=int.parse(a);
     i = i+1;
-    var pathCartoon= appDocPath+"/cartoon"+i.toString()+".png";
+
+
+
+    var pathCartoon= patchImages+i.toString()+".png";//donde se guardara el cartoon
     // Reading image
     var image = File(pathImage);
     var imageAsBytes = await image.readAsBytes();
@@ -78,9 +156,12 @@ class ImageModel extends Model {
           var imageResponse = base64.decode(cartoon);
 
           // Writing the decoded image to the output file
-          var f = await outputFile.writeAsBytes(imageResponse);
+          var f = await outputFile.writeAsBytes(imageResponse);//
 
           _temp=cartoon.toString();
+
+
+          counterfile1.writeAsStringSync(i.toString());//actualizamos con +1 valor almacenado
 
           return f;
         }
@@ -104,8 +185,13 @@ class ImageModel extends Model {
     );
   }
 
+  void onImageButtonPressed  () {
 
-}
+    notifyListeners();
+  }
+
+
+}//fin
 
 
 
