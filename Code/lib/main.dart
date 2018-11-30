@@ -69,6 +69,18 @@ class View extends StatelessWidget {
               );
             },
           ),
+          ScopedModelDescendant<ImageModel>(
+            builder: (context, child, model) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: FloatingActionButton(
+                  onPressed: model.shareImage,
+                  tooltip: 'ShareImage',
+                  child: new Icon(Icons.share),
+                ),
+              );
+            },
+          ),
 
         ],
       ),
